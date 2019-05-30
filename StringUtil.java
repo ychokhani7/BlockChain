@@ -2,26 +2,42 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.Base64;
 
-public class StringUtil{
-    public static String applySha256(String input){
+public class StringUtil
+
+{
+
+    //this applies SHA256 algorithm to a string and returns the result.It generates a 256 bit signature for a text.
+    //A hash cannot be decrypted back to the original text.
+    public static String applySha256(String input)
+    {
+        
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes("UTF-8"));
             StringBuffer hexString = new StringBuffer();
-            for(int i=0;i<hash.length;i++){
+            for(int i=0;i<hash.length;i++)
+            {
                 String hex = Integer.toHexString(0xff & hash[i]);
                 if(hex.length()==1) hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();
-        }catch (Exception e){
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException(e);
         }
     }
-    public static byte[] applyECDSASig(PrivateKey privateKey,String input){
+
+
+
+    public static byte[] applyECDSASig(PrivateKey privateKey,String input)
+    {
+        //This appiles ECDSA Signature to the input and the sender's private key and returns the result as bytes.
         Signature dsa;
         byte[] output = new byte[0];
-        try{
+        try
+        {
             dsa = Signature.getInstance("ECDSA","BC");
             dsa.initSign(privateKey);
             byte[] strByte = input.getBytes();
@@ -29,35 +45,47 @@ public class StringUtil{
             byte[] realSig = dsa.sign();
             output = realSig;
 
-        }catch(Exception e){
+        }
+        catch(Exception e)
+        {
             throw new RuntimeException(e);
         }
         return output;
     }
 
-    public static boolean verifyECDSASig(PublicKey publicKey, String data, byte[] signature) {
+    public static boolean verifyECDSASig(PublicKey publicKey, String data, byte[] signature) 
+    {
+
+        //This will verify the signature using the public key and the string data.It returns True or False if the signature is valid
+        //Only the public key of the reciepient will be able to sucessfully verify the transaction.
         try {
             Signature ecdsaVerify = Signature.getInstance("ECDSA", "BC");
             ecdsaVerify.initVerify(publicKey);
             ecdsaVerify.update(data.getBytes());
             return ecdsaVerify.verify(signature);
-        }catch(Exception e) {
+         }
+        catch(Exception e)
+         {
             throw new RuntimeException(e);
         }
     }
 
-    public static String getStringFromKey(Key k){
+    public static String getStringFromKey(Key k)
+    {
         return Base64.getEncoder().encodeToString(k.getEncoded());
     }
 
-    public static String getMerkleRoot(ArrayList<Transaction> transactions) {
+    public static String getMerkleRoot(ArrayList<Transaction> transactions) 
+    {
         int count = transactions.size();
         ArrayList<String> previousTreeLayer = new ArrayList<String>();
-        for(Transaction transaction : transactions) {
+        for(Transaction transaction : transactions)
+         {
             previousTreeLayer.add(transaction.transactionId);
         }
         ArrayList<String> treeLayer = previousTreeLayer;
-        while(count > 1) {
+        while(count > 1) 
+        {
             treeLayer = new ArrayList<String>();
             for(int i=1; i < previousTreeLayer.size(); i++) {
                 treeLayer.add(applySha256(previousTreeLayer.get(i-1) + previousTreeLayer.get(i)));
@@ -69,7 +97,8 @@ public class StringUtil{
         return merkleRoot;
     }
 
-    public static String getDifficultyString(int difficulty){
+    public static String getDifficultyString(int difficulty)
+    {
         return new String(new char[difficulty]).replace('\0','0');
     }
 }
